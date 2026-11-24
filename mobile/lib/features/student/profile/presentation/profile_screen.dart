@@ -66,7 +66,7 @@ class ProfileScreen extends ConsumerWidget {
                   : null,
             ),
             const SizedBox(height: 16),
-            Text('Sosyal etkin', style: t.textTheme.titleMedium),
+            Text('Sosyal etki', style: t.textTheme.titleMedium),
             const SizedBox(height: 8),
             _ImpactGrid(p.impact),
             const SizedBox(height: 24),
