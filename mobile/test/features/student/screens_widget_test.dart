@@ -32,7 +32,9 @@ class MockProfile extends Mock implements ProfileRepository {}
 
 class FixedLocation implements LocationService {
   @override
-  Future<GeoPoint?> currentPosition() async => const GeoPoint(41, 29);
+  Future<LocationReading> read() async => const LocationReading.ok(GeoPoint(41, 29));
+  @override
+  Future<void> openSettings(LocationIssue issue) async {}
 }
 
 NearbyPackage pkg(String id, String title) => NearbyPackage(

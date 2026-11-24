@@ -36,7 +36,9 @@ class NoPush implements PushService {
 
 class FixedLocation implements LocationService {
   @override
-  Future<GeoPoint?> currentPosition() async => const GeoPoint(41.0422, 29.0094);
+  Future<LocationReading> read() async => const LocationReading.ok(GeoPoint(41.0422, 29.0094));
+  @override
+  Future<void> openSettings(LocationIssue issue) async {}
 }
 
 final _now = DateTime.now();

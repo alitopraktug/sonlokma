@@ -46,7 +46,11 @@ class FakeLocation implements LocationService {
   FakeLocation(this.point);
   final GeoPoint? point;
   @override
-  Future<GeoPoint?> currentPosition() async => point;
+  Future<LocationReading> read() async => point == null
+      ? const LocationReading.failed(LocationIssue.denied)
+      : LocationReading.ok(point!);
+  @override
+  Future<void> openSettings(LocationIssue issue) async {}
 }
 
 void main() {
