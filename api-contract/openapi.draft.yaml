@@ -1,0 +1,394 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# TASLAK — [CONTRACT] PR'ı için Ben'in önerisi. 3 kişinin onayı olmadan openapi.yaml'a girmez.
+#
+# Kapsam: öğrenci mobil uygulamasının kullandığı endpoint'ler. Ortak dokümanda alanları
+# belirtilmemiş yanıtlar için mobilin VARSAYDIĞI şemalar "x-proposal: true" ile işaretli;
+# Siret/Yusuf ile tartışılacak noktalar bunlar.
+#
+# Prism mock (port 4010) örnekleri bu dosyadaki `example`'lardan döner. GET /orders/{id}
+# örneği bilerek PAID → mobil ödeme polling'i mock'ta da tamamlanır.
+# ─────────────────────────────────────────────────────────────────────────────
+openapi: 3.0.3
+info:
+  title: SonLokma API
+  version: 0.1.0-draft
+servers:
+  - url: http://localhost:3000/api/v1
+  - url: http://localhost:4010
+security:
+  - bearer: []
+
+paths:
+  /auth/register:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name, role]
+              properties:
+                email: { type: string, format: email, example: ali@ogr.edu.tr }
+                password: { type: string, minLength: 8, example: sifre1234 }
+                name: { type: string, example: Ali }
+                role: { $ref: '#/components/schemas/Role' }
+      responses:
+        '201': { description: Kayıt oluşturuldu }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /auth/verify-email:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [token], properties: { token: { type: string } } }
+      responses:
+        '200': { description: Doğrulandı }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /auth/login:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: ali@ogr.edu.tr }
+                password: { type: string, example: sifre1234 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/TokenPair'
+                  - type: object
+                    required: [user]
+                    properties: { user: { $ref: '#/components/schemas/User' } }
+        '401': { $ref: '#/components/responses/Error' }
+
+  /auth/refresh:
+    post:
+      security: []
+      x-proposal: true # yanıtın TokenPair olduğu varsayıldı (user içermez)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [refreshToken], properties: { refreshToken: { type: string } } }
+      responses:
+        '200':
+          description: Yeni token çifti (rotation — eski refreshToken geçersiz olur)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenPair' }
+        '401': { $ref: '#/components/responses/Error' }
+
+  /users/me:
+    get:
+      responses:
+        '200':
+          description: Profil + sosyal etki
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/User'
+                  - type: object
+                    required: [impact]
+                    properties: { impact: { $ref: '#/components/schemas/Impact' } }
+    delete:
+      description: KVKK — soft delete + anonimleştirme
+      responses:
+        '204': { description: Silindi }
+
+  /users/me/device-token:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [fcmToken], properties: { fcmToken: { type: string } } }
+      responses:
+        '204': { description: Kaydedildi }
+
+  /packages/nearby:
+    get:
+      parameters:
+        - { name: lat, in: query, required: true, schema: { type: number, example: 41.0422 } }
+        - { name: lng, in: query, required: true, schema: { type: number, example: 29.0094 } }
+        - { name: radius, in: query, required: true, schema: { type: integer, maximum: 10000, example: 3000 } }
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/Category' } }
+        - { name: maxPrice, in: query, schema: { type: integer, description: kuruş } }
+        - { name: pickupAfter, in: query, schema: { type: string, format: date-time } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        '200':
+          description: Mesafeye göre artan sıralı
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/NearbyPackage' } }
+                  nextCursor: { type: string, nullable: true, example: null }
+
+  /packages/{id}:
+    get:
+      security: []
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PackageDetail' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /orders:
+    post:
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: İstemci her satın alma DENEMESİ için bir UUID üretir; ağ hatasında aynı key ile tekrar gönderir. Aynı key → aynı sipariş döner.
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [packageId, quantity]
+              properties:
+                packageId: { type: string, format: uuid }
+                quantity: { type: integer, minimum: 1, default: 1 }
+      responses:
+        '201':
+          description: Rezerve edildi (PENDING_PAYMENT)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+              example:
+                id: 7f1c0a52-0000-4000-8000-000000000001
+                packageId: 2b5d9c1e-0000-4000-8000-000000000001
+                quantity: 1
+                totalPrice: 8990
+                status: PENDING_PAYMENT
+                reservationExpiresAt: '2026-12-01T18:10:00Z'
+                createdAt: '2026-12-01T18:00:00Z'
+        '409': { $ref: '#/components/responses/Error' } # OUT_OF_STOCK
+
+  /orders/me:
+    get:
+      x-proposal: true # cursor pagination varsayıldı
+      parameters:
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 20 } }
+      responses:
+        '200':
+          description: En yeni önce
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Order' } }
+                  nextCursor: { type: string, nullable: true }
+
+  /orders/{id}:
+    get:
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Durum takibi
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+              example: # Prism mock: PAID döner → mobil polling tamamlanır
+                id: 7f1c0a52-0000-4000-8000-000000000001
+                packageId: 2b5d9c1e-0000-4000-8000-000000000001
+                quantity: 1
+                totalPrice: 8990
+                status: PAID
+                reservationExpiresAt: '2026-12-01T18:10:00Z'
+                createdAt: '2026-12-01T18:00:00Z'
+                package: { title: Akşam Sürpriz Paketi, businessName: Kampüs Fırını, pickupStart: '2026-12-01T19:00:00Z', pickupEnd: '2026-12-01T20:00:00Z' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /orders/{id}/qr:
+    get:
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200':
+          description: Yalnızca PAID siparişler
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [qrToken, expiresAt]
+                properties:
+                  qrToken: { type: string, example: eyJvaWQiOiI3ZjFjIiwianRpIjoiYSIsImV4cCI6MTc2NDYxMjYwMH0.c2lnbmF0dXJl }
+                  expiresAt: { type: string, format: date-time, example: '2026-12-01T18:20:00Z' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /payments/checkout:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [orderId], properties: { orderId: { type: string, format: uuid } } }
+      responses:
+        '200':
+          description: iyzico checkout form URL'i (WebView'de açılır)
+          x-proposal: true # form bitince WebView'in yönlendirileceği callback yolu (mobil varsayımı /payments/callback) burada belgelenmeli
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [checkoutFormUrl]
+                properties:
+                  checkoutFormUrl: { type: string, format: uri, example: 'https://sandbox-cpp.iyzipay.com?token=abc' }
+        '409': { $ref: '#/components/responses/Error' } # RESERVATION_EXPIRED
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+
+  responses:
+    Error:
+      description: Ortak hata formatı
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [statusCode, error, message]
+      properties:
+        statusCode: { type: integer, example: 409 }
+        error:
+          type: string
+          enum: [VALIDATION_ERROR, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, OUT_OF_STOCK, RESERVATION_EXPIRED, PAYMENT_FAILED, QR_INVALID, QR_ALREADY_USED, RATE_LIMITED]
+          example: OUT_OF_STOCK
+        message: { type: string, example: Paket tükendi }
+
+    Role: { type: string, enum: [STUDENT, BUSINESS, ADMIN] }
+    Category: { type: string, enum: [BAKERY, CAFE, RESTAURANT] }
+    OrderStatus: { type: string, enum: [PENDING_PAYMENT, PAID, PICKED_UP, EXPIRED, CANCELLED] }
+    PackageStatus: { type: string, enum: [ACTIVE, SOLD_OUT, EXPIRED, CANCELLED] }
+
+    TokenPair:
+      type: object
+      required: [accessToken, refreshToken]
+      properties:
+        accessToken: { type: string, description: 15 dk }
+        refreshToken: { type: string, description: 30 gün }
+
+    User:
+      type: object
+      required: [id, email, name, role, isStudentVerified]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, example: ali@ogr.edu.tr }
+        name: { type: string, example: Ali }
+        role: { $ref: '#/components/schemas/Role' }
+        isStudentVerified: { type: boolean, example: true }
+
+    Impact:
+      type: object
+      x-proposal: true # kgSaved number, moneySaved kuruş varsayıldı
+      required: [packagesSaved, kgSaved, moneySaved]
+      properties:
+        packagesSaved: { type: integer, example: 12 }
+        kgSaved: { type: number, example: 9.6 }
+        moneySaved: { type: integer, description: kuruş, example: 184000 }
+
+    BusinessSummary:
+      type: object
+      x-proposal: true
+      required: [id, name, category, lat, lng]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, example: Kampüs Fırını }
+        category: { $ref: '#/components/schemas/Category' }
+        lat: { type: number, example: 41.0431 }
+        lng: { type: number, example: 29.0102 }
+
+    NearbyPackage:
+      type: object
+      x-proposal: true # distanceMeters + gömülü business özeti
+      required: [id, title, price, originalPrice, availableQuantity, pickupStart, pickupEnd, distanceMeters, business]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string, example: Akşam Sürpriz Paketi }
+        imageUrl: { type: string, nullable: true }
+        price: { type: integer, description: kuruş, example: 8990 }
+        originalPrice: { type: integer, description: kuruş, example: 25000 }
+        availableQuantity: { type: integer, example: 3 }
+        pickupStart: { type: string, format: date-time, example: '2026-12-01T19:00:00Z' }
+        pickupEnd: { type: string, format: date-time, example: '2026-12-01T20:00:00Z' }
+        distanceMeters: { type: integer, example: 420 }
+        business: { $ref: '#/components/schemas/BusinessSummary' }
+
+    PackageDetail:
+      type: object
+      x-proposal: true
+      required: [id, title, price, originalPrice, totalQuantity, availableQuantity, pickupStart, pickupEnd, status, business]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        imageUrl: { type: string, nullable: true }
+        price: { type: integer }
+        originalPrice: { type: integer }
+        totalQuantity: { type: integer }
+        availableQuantity: { type: integer }
+        pickupStart: { type: string, format: date-time }
+        pickupEnd: { type: string, format: date-time }
+        status: { $ref: '#/components/schemas/PackageStatus' }
+        business:
+          allOf:
+            - $ref: '#/components/schemas/BusinessSummary'
+            - type: object
+              required: [address]
+              properties: { address: { type: string, example: Kampüs Cd. No:1 } }
+
+    Order:
+      type: object
+      required: [id, packageId, quantity, totalPrice, status, reservationExpiresAt, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        packageId: { type: string, format: uuid }
+        quantity: { type: integer, example: 1 }
+        totalPrice: { type: integer, description: kuruş, example: 8990 }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        reservationExpiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        pickedUpAt: { type: string, format: date-time, nullable: true }
+        package:
+          x-proposal: true # liste ekranı için gömülü özet
+          type: object
+          nullable: true
+          properties:
+            title: { type: string }
+            businessName: { type: string }
+            pickupStart: { type: string, format: date-time }
+            pickupEnd: { type: string, format: date-time }
