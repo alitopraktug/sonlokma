@@ -22,6 +22,8 @@ void main() {
     await t.enterText(fields.at(0), 'Ali');
     await t.enterText(fields.at(1), 'ali@gmail.com'); // .edu.tr değil → doğrulama ekranına gitmez
     await t.enterText(fields.at(2), 'sifre1234');
+    await t.ensureVisible(find.byKey(const Key('register_submit')));
+    await t.pump();
   }
 
   void stubRegister() => when(() => repo.register(
@@ -51,7 +53,6 @@ void main() {
     await pumpAndFill(t);
     await t.tap(find.byKey(const Key('register_kvkk')));
     await t.pump();
-    await t.ensureVisible(find.byKey(const Key('register_submit')));
     await t.tap(find.byKey(const Key('register_submit')));
     await t.pump();
 
