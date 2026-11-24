@@ -43,7 +43,8 @@ void main() {
   }
 
   Future<void> openDelete(WidgetTester t) async {
-    await t.scrollUntilVisible(find.text('Hesabımı sil'), 100);
+    await t.ensureVisible(find.text('Hesabımı sil'));
+    await t.pumpAndSettle();
     await t.tap(find.text('Hesabımı sil'));
     await t.pumpAndSettle();
   }
