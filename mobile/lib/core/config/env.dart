@@ -33,4 +33,3 @@ abstract final class Env {
   static final campusLng =
       double.parse(const String.fromEnvironment('CAMPUS_LNG', defaultValue: '29.0094'));
 }
-}
