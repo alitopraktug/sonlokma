@@ -119,13 +119,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
         CheckoutSoldOut() => _Result(
             icon: Icons.sentiment_dissatisfied_outlined,
-            title: ApiError(code: ApiErrorCode.outOfStock).userMessage,
+            title: const ApiError(code: ApiErrorCode.outOfStock).userMessage,
             body: 'Yakınındaki diğer paketlere göz atabilirsin.',
             primary: ('Diğer paketler', () => context.go(Routes.home)),
           ),
         CheckoutExpired() => _Result(
             icon: Icons.timer_off_outlined,
-            title: ApiError(code: ApiErrorCode.reservationExpired).userMessage,
+            title: const ApiError(code: ApiErrorCode.reservationExpired).userMessage,
             primary: ('Tekrar dene', _ctrl.reserve),
             secondary: ('Vazgeç', () => context.pop()),
           ),

@@ -58,12 +58,12 @@ class DiscoverFilter {
       );
 
   @override
-  bool operator ==(Object o) =>
-      o is DiscoverFilter &&
-      o.category == category &&
-      o.radiusKm == radiusKm &&
-      o.maxPrice == maxPrice &&
-      o.pickupAfter == pickupAfter;
+  bool operator ==(Object other) =>
+      other is DiscoverFilter &&
+      other.category == category &&
+      other.radiusKm == radiusKm &&
+      other.maxPrice == maxPrice &&
+      other.pickupAfter == pickupAfter;
 
   @override
   int get hashCode => Object.hash(category, radiusKm, maxPrice, pickupAfter);
