@@ -32,6 +32,9 @@ void main() {
   });
 
   Future<void> pump(WidgetTester t) async {
+    t.view.physicalSize = const Size(800, 2400);
+    t.view.devicePixelRatio = 1;
+    addTearDown(t.view.reset);
     await t.pumpWidget(ProviderScope(
       overrides: [
         profileRepositoryProvider.overrideWithValue(profile),
@@ -43,8 +46,6 @@ void main() {
   }
 
   Future<void> openDelete(WidgetTester t) async {
-    await t.ensureVisible(find.text('Hesabımı sil'));
-    await t.pumpAndSettle();
     await t.tap(find.text('Hesabımı sil'));
     await t.pumpAndSettle();
   }
