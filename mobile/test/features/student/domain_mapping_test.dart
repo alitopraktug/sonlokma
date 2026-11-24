@@ -6,7 +6,6 @@ import 'package:sonlokma/features/student/discover/presentation/providers/locati
 import 'package:sonlokma/features/student/orders/data/order_dto.dart';
 import 'package:sonlokma/features/student/orders/domain/order.dart';
 import 'package:sonlokma/features/student/package_detail/data/package_detail_dto.dart';
-import 'package:sonlokma/features/student/package_detail/domain/package_detail.dart';
 import 'package:sonlokma/features/student/profile/domain/profile.dart';
 
 Map<String, dynamic> detailJson({String status = 'ACTIVE', int available = 3}) => {
