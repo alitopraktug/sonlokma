@@ -60,17 +60,20 @@ class AuthInterceptor extends QueuedInterceptor {
     final refreshToken = await _storage.readRefreshToken();
     if (refreshToken == null) return _expire(handler, err);
 
+    // Yalnızca refresh isteğinin kendisi try içinde: tekrar denenen isteğin hatası
+    // "refresh başarısız" sanılıp kullanıcıyı çıkış yaptırmasın.
+    final TokenPair pair;
     try {
       final res = await _plainDio.post<Map<String, dynamic>>(
         '/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
-      final pair = TokenPair.fromJson(res.data!);
+      pair = TokenPair.fromJson(res.data!);
       await _storage.save(pair);
-      return _retry(options, pair.accessToken, handler, err);
     } on DioException {
       return _expire(handler, err);
     }
+    return _retry(options, pair.accessToken, handler, err);
   }
 
   Future<void> _retry(
