@@ -1,12 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_error.dart';
+import '../../../../core/notifications/push_events.dart';
 import '../data/orders_repository_impl.dart';
 import '../domain/order.dart';
 
-final orderProvider = FutureProvider.autoDispose.family<Order, String>(
-  (ref, id) => ref.watch(ordersRepositoryProvider).getOrder(id),
-);
+/// Bu siparişle ilgili push gelirse (ödendi, teslim edildi) kendini yeniler.
+final orderProvider = FutureProvider.autoDispose.family<Order, String>((ref, id) {
+  final sub = ref.read(pushEventBusProvider).stream.listen((e) {
+    if (e.changesOrder && e.orderId == id) ref.invalidateSelf();
+  });
+  ref.onDispose(sub.cancel);
+  return ref.watch(ordersRepositoryProvider).getOrder(id);
+});
 
 class MyOrdersState {
   const MyOrdersState(this.items, this.nextCursor, {this.isLoadingMore = false, this.error});
@@ -19,6 +25,12 @@ class MyOrdersState {
 class MyOrdersController extends AsyncNotifier<MyOrdersState> {
   @override
   Future<MyOrdersState> build() async {
+    // Herhangi bir sipariş durumu değişirse liste baştan yüklenir (rozetler güncel kalsın).
+    final sub = ref.read(pushEventBusProvider).stream.listen((e) {
+      if (e.changesOrder) ref.invalidateSelf();
+    });
+    ref.onDispose(sub.cancel);
+
     final page = await ref.read(ordersRepositoryProvider).myOrders();
     return MyOrdersState(page.items, page.nextCursor);
   }

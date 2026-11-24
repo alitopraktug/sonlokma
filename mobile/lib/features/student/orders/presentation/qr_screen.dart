@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
 import '../../../../core/network/api_error.dart';
+import '../../../../core/notifications/push_events.dart';
 import '../../../../core/router/app_router.dart';
 import 'orders_providers.dart';
 import 'qr_controller.dart';
@@ -18,16 +21,39 @@ class QrScreen extends ConsumerStatefulWidget {
 }
 
 class _QrScreenState extends ConsumerState<QrScreen> with WidgetsBindingObserver {
+  StreamSubscription<PushEvent>? _pushSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Kasadaki okuyucu düşük parlaklıkta QR'ı zor okur.
     _setBrightness(true);
+    // İşletme QR'ı okuttuğu an kullanıcıya haber ver (ekran öylece açık kalmasın).
+    _pushSub = ref.read(pushEventBusProvider).stream.listen((e) {
+      if (e.type == PushType.orderPickedUp && e.orderId == widget.orderId) _onPickedUp();
+    });
+  }
+
+  Future<void> _onPickedUp() async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (c) => AlertDialog(
+        icon: const Icon(Icons.check_circle, size: 48),
+        title: const Text('Afiyet olsun!'),
+        content: const Text('Paketin teslim edildi. Bir paketi daha israftan kurtardın 🌱'),
+        actions: [
+          FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Tamam')),
+        ],
+      ),
+    );
+    if (mounted) context.go(Routes.orderDetail(widget.orderId));
   }
 
   @override
   void dispose() {
+    _pushSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _setBrightness(false);
     super.dispose();
