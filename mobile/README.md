@@ -16,7 +16,7 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1   # gerçek b
 
 ## İlk kurulumdan sonra
 ```powershell
-dart run build_runner build --delete-conflicting-outputs   # freezed DTO'ları üretir
+dart run build_runner build   # freezed DTO'ları üretir
 ```
 **Google Maps anahtarı (koda gömülmez):**
 - `android/app/build.gradle` → `defaultConfig { manifestPlaceholders += [MAPS_API_KEY: System.getenv("GOOGLE_MAPS_API_KEY") ?: ""] }`

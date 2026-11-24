@@ -6,7 +6,7 @@ import '../domain/nearby_package.dart';
 part 'nearby_package_dto.freezed.dart';
 part 'nearby_package_dto.g.dart';
 
-// Üretmek için: dart run build_runner build --delete-conflicting-outputs
+// Üretmek için: dart run build_runner build
 //
 // ⚠️ KONTRAT: Ortak dokümanda nearby item'ının alanları tek tek yazılmamış. Aşağıdaki şekil
 // Package modeli + "işletme bilgisi" + "mesafeye göre sıralı" ifadesinden türetildi.
