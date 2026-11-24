@@ -10,7 +10,7 @@ part 'package_detail_dto.g.dart';
 // ⚠️ KONTRAT: "Detay + işletme bilgisi" ifadesinden türetildi; openapi.yaml'da netleştirilmeli.
 
 @freezed
-class BusinessDetailDto with _$BusinessDetailDto {
+abstract class BusinessDetailDto with _$BusinessDetailDto {
   const factory BusinessDetailDto({
     required String id,
     required String name,
@@ -25,7 +25,7 @@ class BusinessDetailDto with _$BusinessDetailDto {
 }
 
 @freezed
-class PackageDetailDto with _$PackageDetailDto {
+abstract class PackageDetailDto with _$PackageDetailDto {
   const factory PackageDetailDto({
     required String id,
     required String title,

@@ -10,7 +10,7 @@ part 'order_dto.g.dart';
 // olarak eklendi. openapi.yaml'da Siret ile netleştirilmeli. Gelmezse liste yine çalışır.
 
 @freezed
-class OrderPackageDto with _$OrderPackageDto {
+abstract class OrderPackageDto with _$OrderPackageDto {
   const factory OrderPackageDto({
     required String title,
     String? businessName,
@@ -22,7 +22,7 @@ class OrderPackageDto with _$OrderPackageDto {
 }
 
 @freezed
-class OrderDto with _$OrderDto {
+abstract class OrderDto with _$OrderDto {
   const factory OrderDto({
     required String id,
     required String packageId,
@@ -39,7 +39,7 @@ class OrderDto with _$OrderDto {
 }
 
 @freezed
-class QrTicketDto with _$QrTicketDto {
+abstract class QrTicketDto with _$QrTicketDto {
   const factory QrTicketDto({required String qrToken, required String expiresAt}) = _QrTicketDto;
 
   factory QrTicketDto.fromJson(Map<String, dynamic> json) => _$QrTicketDtoFromJson(json);

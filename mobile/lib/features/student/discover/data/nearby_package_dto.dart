@@ -13,7 +13,7 @@ part 'nearby_package_dto.g.dart';
 // openapi.yaml yazılırken (Hafta 1) Siret ile birebir netleştirilmeli.
 
 @freezed
-class BusinessSummaryDto with _$BusinessSummaryDto {
+abstract class BusinessSummaryDto with _$BusinessSummaryDto {
   const factory BusinessSummaryDto({
     required String id,
     required String name,
@@ -27,7 +27,7 @@ class BusinessSummaryDto with _$BusinessSummaryDto {
 }
 
 @freezed
-class NearbyPackageDto with _$NearbyPackageDto {
+abstract class NearbyPackageDto with _$NearbyPackageDto {
   const factory NearbyPackageDto({
     required String id,
     required String title,
