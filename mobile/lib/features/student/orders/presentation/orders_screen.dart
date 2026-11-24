@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/network/api_error.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/ui/skeleton.dart';
 import '../../../../core/utils/formatters.dart';
 import '../domain/order.dart';
 import 'orders_providers.dart';
@@ -18,7 +19,7 @@ class OrdersScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Siparişlerim')),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonList(thumbnail: false),
         error: (e, _) => Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text(e is ApiError ? e.userMessage : 'Siparişler yüklenemedi.'),
