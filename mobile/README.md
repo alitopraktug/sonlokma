@@ -33,7 +33,7 @@ flutter test                                          # unit + widget
 flutter test integration_test/purchase_flow_test.dart # emülatör açıkken
 ```
 
-Kampüs merkezi: `--dart-define=CAMPUS_LAT=.. --dart-define=CAMPUS_LNG=..`
+Konum yoksa varsayılan merkez: `--dart-define=DEFAULT_LAT=.. --dart-define=DEFAULT_LNG=..`
 
 Harita benchmark'ı (sunum): bkz. [PERF.md](PERF.md). Kontrat taslağı: `../api-contract/openapi.draft.yaml`.
 

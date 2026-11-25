@@ -103,7 +103,7 @@ class _PackageMapViewState extends ConsumerState<PackageMapView> {
 
     return location.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(), // provider hata fırlatmaz, kampüse düşer
+      error: (_, __) => const SizedBox.shrink(), // provider hata fırlatmaz, varsayılan merkeze düşer
       data: (loc) {
         final items = nearby.valueOrNull?.items ?? const <NearbyPackage>[];
         return Stack(
@@ -125,9 +125,9 @@ class _PackageMapViewState extends ConsumerState<PackageMapView> {
               left: 12,
               bottom: 24,
               child: FloatingActionButton.small(
-                heroTag: 'campus',
-                tooltip: 'Kampüse dön',
-                onPressed: () => _moveCamera(campusCenter),
+                heroTag: 'center',
+                tooltip: 'Merkeze dön',
+                onPressed: () => _moveCamera(defaultCenter),
                 child: const Icon(Icons.school_outlined),
               ),
             ),
