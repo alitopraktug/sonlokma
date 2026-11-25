@@ -10,7 +10,7 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 void main() {
   late MockAuthRepository repo;
 
-  setUpAll(() => registerFallbackValue(UserRole.STUDENT));
+  setUpAll(() => registerFallbackValue(UserRole.CUSTOMER));
   setUp(() => repo = MockAuthRepository());
 
   Future<void> pumpAndFill(WidgetTester t) async {
@@ -48,7 +48,7 @@ void main() {
         ));
   });
 
-  testWidgets('onay verilince STUDENT rolüyle kayıt olunur', (t) async {
+  testWidgets('onay verilince CUSTOMER rolüyle kayıt olunur', (t) async {
     stubRegister();
     await pumpAndFill(t);
     await t.tap(find.byKey(const Key('register_kvkk')));
@@ -60,7 +60,7 @@ void main() {
           email: 'ali@gmail.com',
           password: 'sifre1234',
           name: 'Ali',
-          role: UserRole.STUDENT,
+          role: UserRole.CUSTOMER,
         )).called(1);
   });
 

@@ -67,7 +67,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: email,
             password: _password.text,
             name: _name.text.trim(),
-            role: UserRole.STUDENT, // işletme kaydı Yusuf'un akışında
+            role: UserRole.CUSTOMER, // işletme kaydı Yusuf'un akışında
           );
       if (!mounted) return;
       if (AuthValidators.isStudentEmail(email)) {

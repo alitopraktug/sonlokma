@@ -151,7 +151,7 @@ void main() {
     final repo = MockProfile();
     when(repo.me).thenAnswer((_) async => const Profile(
           user: AppUser(
-              id: 'u1', email: 'ali@ogr.edu.tr', name: 'Ali', role: UserRole.STUDENT, isStudentVerified: true),
+              id: 'u1', email: 'ali@ogr.edu.tr', name: 'Ali', role: UserRole.CUSTOMER),
           impact: Impact(packagesSaved: 12, kgSaved: 9.6, moneySaved: 184000),
         ));
     await t.pumpWidget(app([profileRepositoryProvider.overrideWithValue(repo)], const ProfileScreen()));
@@ -159,6 +159,6 @@ void main() {
 
     expect(find.text('12'), findsOneWidget);
     expect(find.text('9,6 kg'), findsOneWidget);
-    expect(find.text('Öğrenci'), findsOneWidget);
+    expect(find.text('Öğrenci'), findsNothing);
   });
 }

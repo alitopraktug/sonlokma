@@ -148,8 +148,7 @@ void main() {
           id: 'u1',
           email: 'ali@ogr.edu.tr',
           name: 'Ali',
-          role: UserRole.STUDENT,
-          isStudentVerified: true,
+          role: UserRole.CUSTOMER,
         ));
 
     await t.pumpWidget(ProviderScope(

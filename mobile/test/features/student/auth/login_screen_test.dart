@@ -13,8 +13,7 @@ const _student = AppUser(
   id: 'u1',
   email: 'ali@ogr.edu.tr',
   name: 'Ali',
-  role: UserRole.STUDENT,
-  isStudentVerified: true,
+  role: UserRole.CUSTOMER,
 );
 
 void main() {

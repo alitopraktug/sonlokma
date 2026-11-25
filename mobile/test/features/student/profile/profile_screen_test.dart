@@ -14,7 +14,7 @@ class MockProfileRepository extends Mock implements ProfileRepository {}
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 const _user = AppUser(
-    id: 'u1', email: 'ali@ogr.edu.tr', name: 'Ali', role: UserRole.STUDENT, isStudentVerified: true);
+    id: 'u1', email: 'ali@ogr.edu.tr', name: 'Ali', role: UserRole.CUSTOMER);
 
 void main() {
   setUpAll(() => initializeDateFormatting('tr_TR'));
@@ -50,10 +50,10 @@ void main() {
     await t.pumpAndSettle();
   }
 
-  testWidgets('profil ve öğrenci rozeti gösterilir', (t) async {
+  testWidgets('profil gösterilir, öğrenci rozeti yok', (t) async {
     await pump(t);
     expect(find.text('Ali'), findsOneWidget);
-    expect(find.text('Öğrenci'), findsOneWidget);
+    expect(find.text('Öğrenci'), findsNothing);
     expect(find.text('Sosyal etki'), findsOneWidget);
   });
 
