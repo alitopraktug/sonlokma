@@ -89,7 +89,7 @@ void main() {
     test('e-posta', () {
       expect(AuthValidators.email(''), isNotNull);
       expect(AuthValidators.email('ali@'), isNotNull);
-      expect(AuthValidators.email(' ali@ogr.edu.tr '), isNull);
+      expect(AuthValidators.email(' ali@example.com '), isNull);
     });
 
     test('şifre en az 8 karakter', () {

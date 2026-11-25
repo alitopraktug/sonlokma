@@ -20,9 +20,9 @@ Map<String, dynamic> detailJson({String status = 'ACTIVE', int available = 3}) =
       'status': status,
       'business': {
         'id': 'b1',
-        'name': 'Kampüs Fırını',
+        'name': 'Mahalle Fırını',
         'category': 'BAKERY',
-        'address': 'Kampüs Cd. No:1',
+        'address': 'Çarşı Cd. No:1',
         'lat': 41.0,
         'lng': 29.0,
       },

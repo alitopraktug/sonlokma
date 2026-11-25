@@ -14,7 +14,7 @@ class MockProfileRepository extends Mock implements ProfileRepository {}
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 const _user = AppUser(
-    id: 'u1', email: 'ali@ogr.edu.tr', name: 'Ali', role: UserRole.CUSTOMER);
+    id: 'u1', email: 'ali@example.com', name: 'Ali', role: UserRole.CUSTOMER);
 
 void main() {
   setUpAll(() => initializeDateFormatting('tr_TR'));

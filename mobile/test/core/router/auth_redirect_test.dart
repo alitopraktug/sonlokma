@@ -4,7 +4,7 @@ import 'package:sonlokma/core/auth/auth_repository.dart';
 import 'package:sonlokma/core/router/app_router.dart';
 
 AppUser _user(UserRole role) =>
-    AppUser(id: '1', email: 'a@x.edu.tr', name: 'A', role: role);
+    AppUser(id: '1', email: 'a@example.com', name: 'A', role: role);
 
 void main() {
   test('yüklenirken splash', () {

@@ -48,7 +48,7 @@ NearbyPackage pkg(String id, String title) => NearbyPackage(
       pickupEnd: DateTime(2026, 12, 1, 20),
       distanceMeters: 1250,
       businessId: 'b',
-      businessName: 'Kampüs Fırını',
+      businessName: 'Mahalle Fırını',
       category: BusinessCategory.BAKERY,
       location: const GeoPoint(41, 29),
     );
@@ -151,7 +151,7 @@ void main() {
     final repo = MockProfile();
     when(repo.me).thenAnswer((_) async => const Profile(
           user: AppUser(
-              id: 'u1', email: 'ali@ogr.edu.tr', name: 'Ali', role: UserRole.CUSTOMER),
+              id: 'u1', email: 'ali@example.com', name: 'Ali', role: UserRole.CUSTOMER),
           impact: Impact(packagesSaved: 12, kgSaved: 9.6, moneySaved: 184000),
         ));
     await t.pumpWidget(app([profileRepositoryProvider.overrideWithValue(repo)], const ProfileScreen()));

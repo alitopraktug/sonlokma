@@ -14,7 +14,7 @@ void main() {
 
   Future<void> pump(WidgetTester t) => t.pumpWidget(ProviderScope(
         overrides: [authRepositoryProvider.overrideWithValue(repo)],
-        child: const MaterialApp(home: VerifyEmailScreen(email: 'ali@ogr.edu.tr')),
+        child: const MaterialApp(home: VerifyEmailScreen(email: 'ali@example.com')),
       ));
 
   testWidgets('boş kodla istek gitmez', (t) async {

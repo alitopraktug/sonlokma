@@ -9,9 +9,9 @@ import 'package:sonlokma/features/student/auth/presentation/login_screen.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
-const _student = AppUser(
+const _customer = AppUser(
   id: 'u1',
-  email: 'ali@ogr.edu.tr',
+  email: 'ali@example.com',
   name: 'Ali',
   role: UserRole.CUSTOMER,
 );
@@ -49,9 +49,9 @@ void main() {
   });
 
   testWidgets('başarılı girişte oturum state\'i kullanıcıya döner', (t) async {
-    when(() => repo.login('ali@ogr.edu.tr', 'sifre1234')).thenAnswer((_) async => _student);
+    when(() => repo.login('ali@example.com', 'sifre1234')).thenAnswer((_) async => _customer);
     await pump(t);
-    await fill(t, ' ali@ogr.edu.tr ', 'sifre1234'); // boşluklar kırpılmalı
+    await fill(t, ' ali@example.com ', 'sifre1234'); // boşluklar kırpılmalı
     await t.pumpAndSettle();
 
     expect(container.read(authControllerProvider).valueOrNull?.id, 'u1');
@@ -61,7 +61,7 @@ void main() {
     when(() => repo.login(any(), any())).thenThrow(
         const ApiError(code: ApiErrorCode.unauthorized, statusCode: 401));
     await pump(t);
-    await fill(t, 'ali@ogr.edu.tr', 'yanlis123');
+    await fill(t, 'ali@example.com', 'yanlis123');
     await t.pumpAndSettle();
 
     expect(find.text('E-posta veya şifre hatalı.'), findsOneWidget);
@@ -71,7 +71,7 @@ void main() {
   testWidgets('ağ hatası genel Türkçe mesajla gösterilir', (t) async {
     when(() => repo.login(any(), any())).thenThrow(const ApiError(code: ApiErrorCode.network));
     await pump(t);
-    await fill(t, 'ali@ogr.edu.tr', 'sifre1234');
+    await fill(t, 'ali@example.com', 'sifre1234');
     await t.pumpAndSettle();
 
     expect(find.text('İnternet bağlantını kontrol et.'), findsOneWidget);
