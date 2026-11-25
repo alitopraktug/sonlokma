@@ -20,7 +20,7 @@ void main() {
     ));
     final fields = find.byType(TextFormField);
     await t.enterText(fields.at(0), 'Ali');
-    await t.enterText(fields.at(1), 'ali@gmail.com'); // .edu.tr değil → doğrulama ekranına gitmez
+    await t.enterText(fields.at(1), 'ali@gmail.com');
     await t.enterText(fields.at(2), 'sifre1234');
     await t.ensureVisible(find.byKey(const Key('register_submit')));
     await t.pump();
