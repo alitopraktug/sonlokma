@@ -8,6 +8,7 @@ Kaynak: proje brifi Bölüm 7. Ekranlar bu token'larla birebir uygulanır.
 | `01-gorsel-kimlik.png` | Logo, kullanım ve yanlış kullanım örnekleri |
 | `02-stil-rehberi.png` | Renk, yazı, buton, damga, kart, alt menü |
 | `03-uygulama-ikonu.png` | Uygulama ikonu (Android / iOS) |
+| `tokens.json` | Aşağıdaki token'ların makinece okunur hâli |
 
 ## Renkler
 
