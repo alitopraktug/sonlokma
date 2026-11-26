@@ -322,6 +322,212 @@ paths:
         '200': { description: İşlendi }
         '400': { $ref: '#/components/responses/Error' }
 
+  # ── Askıda yemek ve bağış (Siret kayıt + Yusuf ödeme) ──────────────────────
+  /donations:
+    post:
+      tags: [donations]
+      summary: Tek ödemede 1–10 askı bağışı. type=DONATION sipariş; ödeme onayında N SuspendedMeal kaydı oluşur.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [packageId, quantity]
+              properties:
+                packageId: { type: string, format: uuid }
+                quantity: { type: integer, minimum: 1, maximum: 10, example: 3 }
+      responses:
+        '201':
+          description: DONATION siparişi (PENDING_PAYMENT); ödeme /orders/{id}/checkout ile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /donations/me:
+    get:
+      tags: [donations]
+      summary: Bağışlarım. Bağışçı alanın kimliğini görmez.
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Özet + liste
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [total, claimed, pending, items, nextCursor]
+                properties:
+                  total: { type: integer, example: 10 }
+                  claimed: { type: integer, example: 7 }
+                  pending: { type: integer, example: 3 }
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/SuspendedMeal' }
+                  nextCursor: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Error' }
+
+  /suspended/claim:
+    post:
+      tags: [donations]
+      summary: Askıdan ücretsiz paket alır (günde 1, TR saati). type=CLAIM, doğrudan PAID.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [businessId]
+              properties:
+                businessId: { type: string, format: uuid }
+      responses:
+        '201':
+          description: CLAIM siparişi (PAID)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '403': { description: Telefon doğrulanmamış, $ref: '#/components/responses/Error' }
+        '409': { description: CLAIM_LIMIT_REACHED veya NO_SUSPENDED_AVAILABLE, $ref: '#/components/responses/Error' }
+
+  # ── QR teslim (Yusuf) ──────────────────────────────────────────────────────
+  /orders/{id}/qr:
+    get:
+      tags: [qr]
+      summary: Kısa ömürlü QR token + elle girilebilir kısa kod. Süresi dolmadan yenilenir.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: QR
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, shortCode, expiresAt]
+                properties:
+                  token: { type: string }
+                  shortCode: { type: string, example: K7M2Q9 }
+                  expiresAt: { type: string, format: date-time }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /business/orders/verify-qr:
+    post:
+      tags: [qr]
+      summary: İşletme QR veya kısa kodu okutur; sipariş PICKED_UP olur.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token: { type: string }
+                shortCode: { type: string }
+              oneOf:
+                - required: [token]
+                - required: [shortCode]
+      responses:
+        '200':
+          description: Teslim edildi
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '400': { description: QR_INVALID, $ref: '#/components/responses/Error' }
+        '409': { description: QR_EXPIRED veya QR_ALREADY_USED, $ref: '#/components/responses/Error' }
+
+  # ── İşletme paketleri (Siret endpoint + Yusuf ekran) ───────────────────────
+  /business/packages:
+    get:
+      tags: [business]
+      summary: İşletmenin paketleri
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Liste
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/PackageDetail' }
+                  nextCursor: { type: string, nullable: true }
+        '403': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [business]
+      summary: Paket oluştur (askıya açık olabilir; askı ilanı sabahtan açılabilir)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PackageInput' }
+      responses:
+        '201':
+          description: Oluştu
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PackageDetail' }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /business/packages/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [business]
+      summary: Paket güncelle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PackageInput' }
+      responses:
+        '200':
+          description: Güncel paket
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PackageDetail' }
+        '404': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [business]
+      summary: Paketi kaldır
+      responses:
+        '204': { description: Silindi }
+        '404': { $ref: '#/components/responses/Error' }
+
+  # ── Kontrat değişikliği önerisi (ekip onayı gerekir) ──────────────────────
+  /business/apply:
+    post:
+      tags: [business]
+      x-contract-change: true # brifte yok; işletme girişi akışı (başvuru → admin onayı) bunu gerektiriyor
+      summary: İşletme başvurusu; admin onayına kadar businessStatus PENDING
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, category, address, lat, lng]
+              properties:
+                name: { type: string, example: Moda Fırını }
+                category: { $ref: '#/components/schemas/Category' }
+                address: { type: string }
+                lat: { type: number }
+                lng: { type: number }
+      responses:
+        '202': { description: Başvuru alındı (PENDING) }
+        '400': { $ref: '#/components/responses/Error' }
+
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -482,3 +688,31 @@ components:
         reservationExpiresAt: { type: string, format: date-time }
         createdAt: { type: string, format: date-time }
         pickedUpAt: { type: string, format: date-time, nullable: true }
+
+    SuspendedMeal:
+      type: object
+      required: [id, businessId, donationOrderId, status, createdAt]
+      description: Havuz işletme bazlıdır, belirli pakete bağlı değildir; alınmayan askı ertesi güne kendiliğinden devreder. claimOrderId bağışçıya döndürülmez.
+      properties:
+        id: { type: string, format: uuid }
+        businessId: { type: string, format: uuid }
+        donationOrderId: { type: string, format: uuid }
+        status: { type: string, enum: [AVAILABLE, CLAIMED] }
+        createdAt: { type: string, format: date-time }
+        claimedAt: { type: string, format: date-time, nullable: true }
+
+    PackageInput:
+      type: object
+      required: [title, category, originalPrice, price, quantity, pickupStart, pickupEnd]
+      properties:
+        title: { type: string }
+        category: { $ref: '#/components/schemas/Category' }
+        contentHints: { type: array, items: { type: string } }
+        allergens: { type: array, items: { $ref: '#/components/schemas/Allergen' } }
+        originalPrice: { type: integer, description: kuruş }
+        price: { type: integer, description: kuruş }
+        quantity: { type: integer, minimum: 1 }
+        pickupStart: { type: string, format: date-time }
+        pickupEnd: { type: string, format: date-time }
+        suspendable: { type: boolean, default: false }
+        photoUrl: { type: string, format: uri, nullable: true }
