@@ -1,0 +1,96 @@
+
+name: backend
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sonlokma
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_DB: sonlokma_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://sonlokma:ci_test_password@localhost:5432/sonlokma_test
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check backend project
+        id: project
+        working-directory: .
+        shell: bash
+        run: |
+          if [ -f backend/package.json ] && [ -f backend/package-lock.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          elif [ -d backend ]; then
+            echo "::error::Backend package.json or package-lock.json is missing"
+            exit 1
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Backend project has not been initialized yet."
+          fi
+
+      - name: Setup Node.js
+        if: steps.project.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        if: steps.project.outputs.exists == 'true'
+        run: npm ci
+
+      - name: Generate Prisma client
+        if: steps.project.outputs.exists == 'true'
+        run: npx prisma generate
+
+      - name: Run database migrations
+        if: steps.project.outputs.exists == 'true'
+        run: npx prisma migrate deploy
+
+      - name: Lint
+        if: steps.project.outputs.exists == 'true'
+        run: npm run lint
+
+      - name: Run tests
+        if: steps.project.outputs.exists == 'true'
+        run: npm test
