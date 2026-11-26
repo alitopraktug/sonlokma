@@ -171,6 +171,157 @@ paths:
                 items: { $ref: '#/components/schemas/Neighborhood' }
         '401': { $ref: '#/components/responses/Error' }
 
+  # ── Paket (Siret) ──────────────────────────────────────────────────────────
+  /packages/nearby:
+    get:
+      tags: [packages]
+      summary: Yakındaki paketler. lat+lng veya neighborhoodId zorunlu.
+      parameters:
+        - { name: lat, in: query, schema: { type: number }, example: 40.9876 }
+        - { name: lng, in: query, schema: { type: number }, example: 29.0261 }
+        - { name: neighborhoodId, in: query, schema: { type: string, format: uuid } }
+        - { name: radius, in: query, description: metre, schema: { type: integer, default: 2000 } }
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/Category' } }
+        - { name: maxPrice, in: query, description: kuruş, schema: { type: integer } }
+        - { name: suspendedOnly, in: query, schema: { type: boolean, default: false } }
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Paket listesi
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/NearbyPackage' }
+                  nextCursor: { type: string, nullable: true }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /packages/{id}:
+    get:
+      tags: [packages]
+      summary: Paket detayı + işletme + askıda paket sayısı
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Detay
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PackageDetail' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  # ── Sipariş (Siret) ────────────────────────────────────────────────────────
+  /orders:
+    post:
+      tags: [orders]
+      summary: Paketi 10 dk ayırır (PENDING_PAYMENT)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [packageId, quantity]
+              properties:
+                packageId: { type: string, format: uuid }
+                quantity: { type: integer, minimum: 1, example: 1 }
+      responses:
+        '201':
+          description: Sipariş oluştu
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /orders/me:
+    get:
+      tags: [orders]
+      summary: Siparişlerim (PURCHASE, DONATION, CLAIM)
+      parameters:
+        - { name: type, in: query, schema: { $ref: '#/components/schemas/OrderType' } }
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Liste
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Order' }
+                  nextCursor: { type: string, nullable: true }
+        '401': { $ref: '#/components/responses/Error' }
+
+  /orders/{id}:
+    get:
+      tags: [orders]
+      summary: Sipariş detayı (ödeme sonucu polling ile buradan doğrulanır)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Detay
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+              example:
+                id: 5b1f0c3e-2d7a-4a8e-9c11-0f2e6d4b7a10
+                userId: 0e8c1a52-6a8b-4f6d-8a07-55a2c4e1d903
+                packageId: 9a3e5c71-1b2d-4c4e-8f60-3d7b2a9e1c45
+                type: PURCHASE
+                quantity: 1
+                totalPrice: 8990
+                status: PAID
+                reservationExpiresAt: '2026-12-03T17:10:00Z'
+                createdAt: '2026-12-03T17:00:00Z'
+                pickedUpAt: null
+        '404': { $ref: '#/components/responses/Error' }
+
+  # ── Ödeme (Yusuf) ──────────────────────────────────────────────────────────
+  /orders/{id}/checkout:
+    post:
+      tags: [payments]
+      summary: iyzico ödeme formu adresi döner (WebView)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Ödeme sayfası
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [paymentPageUrl]
+                properties:
+                  paymentPageUrl: { type: string, format: uri }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /payments/callback:
+    post:
+      tags: [payments]
+      security: []
+      summary: iyzico dönüşü; imza doğrulanır, sipariş PAID olur. Mobil bu sonuca değil polling'e güvenir.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token: { type: string }
+      responses:
+        '200': { description: İşlendi }
+        '400': { $ref: '#/components/responses/Error' }
+
 components:
   securitySchemes:
     bearer: { type: http, scheme: bearer, bearerFormat: JWT }
@@ -265,3 +416,69 @@ components:
           properties:
             lat: { type: number, example: 40.9876 }
             lng: { type: number, example: 29.0261 }
+
+    Category: { type: string, enum: [BAKERY, CAFE, RESTAURANT, MARKET] }
+    PackageStatus: { type: string, enum: [ACTIVE, SOLD_OUT, EXPIRED] }
+    OrderType: { type: string, enum: [PURCHASE, DONATION, CLAIM] }
+    OrderStatus: { type: string, enum: [PENDING_PAYMENT, PAID, PICKED_UP, CANCELLED, EXPIRED] }
+    Allergen:
+      type: string
+      enum: [GLUTEN, CRUSTACEANS, EGGS, FISH, PEANUTS, SOY, MILK, NUTS, CELERY, MUSTARD, SESAME, SULPHITES, LUPIN, MOLLUSCS]
+
+    BusinessSummary:
+      type: object
+      x-contract-change: true # gömülü işletme özeti alanları brifte tanımlı değil
+      required: [id, name, category, lat, lng]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, example: Moda Fırını }
+        category: { $ref: '#/components/schemas/Category' }
+        lat: { type: number, example: 40.9862 }
+        lng: { type: number, example: 29.0253 }
+
+    NearbyPackage:
+      type: object
+      required: [id, businessId, title, category, originalPrice, price, available, pickupStart, pickupEnd, photoIsRepresentative, suspendedAvailable, distanceMeters, business]
+      properties:
+        id: { type: string, format: uuid }
+        businessId: { type: string, format: uuid }
+        title: { type: string, example: Sürpriz fırın paketi }
+        category: { $ref: '#/components/schemas/Category' }
+        originalPrice: { type: integer, description: kuruş, example: 25000 }
+        price: { type: integer, description: kuruş, example: 8990 }
+        available: { type: integer, example: 3 }
+        pickupStart: { type: string, format: date-time, example: '2026-12-03T15:00:00Z' }
+        pickupEnd: { type: string, format: date-time, example: '2026-12-03T17:00:00Z' }
+        photoUrl: { type: string, format: uri, nullable: true }
+        photoIsRepresentative: { type: boolean, example: true }
+        suspendedAvailable: { type: integer, description: işletmenin askı havuzundaki AVAILABLE kayıt sayısı, example: 4 }
+        distanceMeters: { type: integer, nullable: true, description: mahalleyle aramada null olabilir, example: 650 }
+        business: { $ref: '#/components/schemas/BusinessSummary' }
+
+    PackageDetail:
+      allOf:
+        - $ref: '#/components/schemas/NearbyPackage'
+        - type: object
+          required: [contentHints, allergens, quantity, suspendable, status, address]
+          properties:
+            contentHints: { type: array, items: { type: string }, example: [Günün ekmeği, poğaça, kruvasan] }
+            allergens: { type: array, items: { $ref: '#/components/schemas/Allergen' }, example: [GLUTEN, MILK] }
+            quantity: { type: integer, example: 10 }
+            suspendable: { type: boolean, example: true }
+            status: { $ref: '#/components/schemas/PackageStatus' }
+            address: { type: string, x-contract-change: true, example: 'Moda Cad. No. 12, Kadıköy' }
+
+    Order:
+      type: object
+      required: [id, userId, packageId, type, quantity, totalPrice, status, reservationExpiresAt, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        packageId: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/OrderType' }
+        quantity: { type: integer, example: 1 }
+        totalPrice: { type: integer, description: kuruş (CLAIM için 0), example: 8990 }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        reservationExpiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        pickedUpAt: { type: string, format: date-time, nullable: true }
