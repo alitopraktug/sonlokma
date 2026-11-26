@@ -6,3 +6,171 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  CUSTOMER
+  BUSINESS
+  ADMIN
+}
+
+enum BusinessStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Category {
+  BAKERY
+  CAFE
+  RESTAURANT
+  MARKET
+}
+
+enum PackageStatus {
+  ACTIVE
+  SOLD_OUT
+  EXPIRED
+}
+
+enum OrderType {
+  PURCHASE
+  DONATION
+  CLAIM
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PICKED_UP
+  CANCELLED
+  EXPIRED
+}
+
+enum SuspendedStatus {
+  AVAILABLE
+  CLAIMED
+}
+
+enum Allergen {
+  GLUTEN
+  CRUSTACEANS
+  EGGS
+  FISH
+  PEANUTS
+  SOY
+  MILK
+  NUTS
+  CELERY
+  MUSTARD
+  SESAME
+  SULPHITES
+  LUPIN
+  MOLLUSCS
+}
+
+model User {
+  id             String     @id @default(uuid()) @db.Uuid
+  phone          String?    @unique @db.VarChar(16)
+  phoneVerified  Boolean    @default(false)
+  name           String?
+  email          String?
+  role           Role       @default(CUSTOMER)
+  kvkkAcceptedAt DateTime?  @db.Timestamptz(3)
+  deletedAt      DateTime?  @db.Timestamptz(3)
+  createdAt      DateTime   @default(now()) @db.Timestamptz(3)
+  businesses     Business[]
+  orders         Order[]
+}
+
+model Neighborhood {
+  id         String     @id @default(uuid()) @db.Uuid
+  name       String
+  district   String
+  city       String
+  lat        Float
+  lng        Float
+  businesses Business[]
+
+  @@unique([city, district, name])
+}
+
+model Business {
+  id             String          @id @default(uuid()) @db.Uuid
+  ownerId        String          @db.Uuid
+  owner          User            @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  neighborhoodId String          @db.Uuid
+  neighborhood   Neighborhood    @relation(fields: [neighborhoodId], references: [id], onDelete: Restrict)
+  name           String
+  category       Category
+  address        String
+  lat            Float
+  lng            Float
+  status         BusinessStatus  @default(PENDING)
+  packages       Package[]
+  suspendedMeals SuspendedMeal[]
+
+  @@index([ownerId])
+  @@index([neighborhoodId, status])
+}
+
+model Package {
+  id                    String        @id @default(uuid()) @db.Uuid
+  businessId            String        @db.Uuid
+  business              Business      @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  title                 String
+  category              Category
+  contentHints          String[]      @default([])
+  allergens             Allergen[]    @default([])
+  originalPrice         Int
+  price                 Int
+  quantity              Int
+  available             Int
+  pickupStart           DateTime      @db.Timestamptz(3)
+  pickupEnd             DateTime      @db.Timestamptz(3)
+  photoUrl              String?
+  photoIsRepresentative Boolean       @default(true)
+  suspendable           Boolean       @default(false)
+  status                PackageStatus @default(ACTIVE)
+  orders                Order[]
+
+  @@index([businessId, status, pickupEnd])
+}
+
+model Order {
+  id                   String          @id @default(uuid()) @db.Uuid
+  userId               String          @db.Uuid
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  packageId            String          @db.Uuid
+  package              Package         @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  type                 OrderType
+  quantity             Int
+  totalPrice           Int
+  status               OrderStatus
+  idempotencyKey       String          @db.Uuid
+  reservationExpiresAt DateTime        @db.Timestamptz(3)
+  pickedUpAt           DateTime?       @db.Timestamptz(3)
+  createdAt            DateTime        @default(now()) @db.Timestamptz(3)
+  donatedMeals         SuspendedMeal[] @relation("Donation")
+  claimedMeal          SuspendedMeal?  @relation("Claim")
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@index([packageId])
+  @@index([status, reservationExpiresAt])
+}
+
+model SuspendedMeal {
+  id              String          @id @default(uuid()) @db.Uuid
+  businessId      String          @db.Uuid
+  business        Business        @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  donationOrderId String          @db.Uuid
+  donationOrder   Order           @relation("Donation", fields: [donationOrderId], references: [id], onDelete: Restrict)
+  claimOrderId    String?         @unique @db.Uuid
+  claimOrder      Order?          @relation("Claim", fields: [claimOrderId], references: [id], onDelete: Restrict)
+  status          SuspendedStatus @default(AVAILABLE)
+  createdAt       DateTime        @default(now()) @db.Timestamptz(3)
+  claimedAt       DateTime?       @db.Timestamptz(3)
+
+  @@index([businessId, status, createdAt])
+  @@index([donationOrderId])
+}
