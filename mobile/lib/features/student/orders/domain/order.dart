@@ -3,6 +3,9 @@ import '../../../../core/network/cursor_page.dart';
 /// Kontrat §6 — tüm katmanlarda AYNI isimler.
 enum OrderStatus { PENDING_PAYMENT, PAID, PICKED_UP, EXPIRED, CANCELLED } // ignore: constant_identifier_names
 
+/// PURCHASE: satın alma · DONATION: askıya bağış · CLAIM: askıdan ücretsiz alım.
+enum OrderType { PURCHASE, DONATION, CLAIM } // ignore: constant_identifier_names
+
 extension OrderStatusTr on OrderStatus {
   String get label => switch (this) {
         OrderStatus.PENDING_PAYMENT => 'Ödeme bekleniyor',
@@ -17,6 +20,7 @@ class Order {
   const Order({
     required this.id,
     required this.packageId,
+    this.type = OrderType.PURCHASE,
     required this.quantity,
     required this.totalPrice,
     required this.status,
@@ -31,6 +35,7 @@ class Order {
 
   final String id;
   final String packageId;
+  final OrderType type;
   final int quantity;
   final int totalPrice; // kuruş
   final OrderStatus status;
@@ -46,8 +51,13 @@ class Order {
 }
 
 class QrTicket {
-  const QrTicket({required this.qrToken, required this.expiresAt});
-  final String qrToken;
+  const QrTicket({required this.token, required this.shortCode, required this.expiresAt});
+
+  /// QR'a basılan kısa ömürlü token.
+  final String token;
+
+  /// Kamera çalışmazsa işletmenin elle gireceği kısa kod (ör. K7M2Q9).
+  final String shortCode;
   final DateTime expiresAt;
 }
 
@@ -62,7 +72,7 @@ abstract class OrdersRepository {
   Future<Order> getOrder(String id);
   Future<CursorPage<Order>> myOrders({String? cursor});
 
-  /// POST /payments/checkout → iyzico `checkoutFormUrl`.
+  /// POST /orders/{id}/checkout → iyzico `paymentPageUrl` (WebView).
   Future<String> startCheckout(String orderId);
 
   /// GET /orders/{id}/qr — yalnızca PAID siparişlerde.

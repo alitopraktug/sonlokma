@@ -7,10 +7,7 @@ part 'nearby_package_dto.freezed.dart';
 part 'nearby_package_dto.g.dart';
 
 // Üretmek için: dart run build_runner build
-//
-// ⚠️ KONTRAT: Ortak dokümanda nearby item'ının alanları tek tek yazılmamış. Aşağıdaki şekil
-// Package modeli + "işletme bilgisi" + "mesafeye göre sıralı" ifadesinden türetildi.
-// openapi.yaml yazılırken (Hafta 1) Siret ile birebir netleştirilmeli.
+// Kaynak: api-contract/openapi.draft.yaml → BusinessSummary, NearbyPackage.
 
 @freezed
 abstract class BusinessSummaryDto with _$BusinessSummaryDto {
@@ -30,14 +27,18 @@ abstract class BusinessSummaryDto with _$BusinessSummaryDto {
 abstract class NearbyPackageDto with _$NearbyPackageDto {
   const factory NearbyPackageDto({
     required String id,
+    required String businessId,
     required String title,
-    String? imageUrl,
-    required int price,
-    required int originalPrice,
-    required int availableQuantity,
+    required String category,
+    required int originalPrice, // kuruş
+    required int price, // kuruş
+    required int available,
     required String pickupStart, // ISO 8601 UTC
     required String pickupEnd,
-    required int distanceMeters,
+    String? photoUrl,
+    @Default(true) bool photoIsRepresentative,
+    @Default(0) int suspendedAvailable,
+    int? distanceMeters, // mahalleyle aramada null
     required BusinessSummaryDto business,
   }) = _NearbyPackageDto;
 
@@ -49,16 +50,18 @@ extension NearbyPackageDtoX on NearbyPackageDto {
   NearbyPackage toEntity() => NearbyPackage(
         id: id,
         title: title,
-        imageUrl: imageUrl,
+        imageUrl: photoUrl,
         price: price,
         originalPrice: originalPrice,
-        availableQuantity: availableQuantity,
+        availableQuantity: available,
         pickupStart: DateTime.parse(pickupStart).toLocal(),
         pickupEnd: DateTime.parse(pickupEnd).toLocal(),
         distanceMeters: distanceMeters,
-        businessId: business.id,
+        photoIsRepresentative: photoIsRepresentative,
+        suspendedAvailable: suspendedAvailable,
+        businessId: businessId,
         businessName: business.name,
-        category: BusinessCategory.values.byName(business.category),
+        category: BusinessCategory.values.byName(category),
         location: GeoPoint(business.lat, business.lng),
       );
 }

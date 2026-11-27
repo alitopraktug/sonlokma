@@ -131,7 +131,8 @@ class FakeOrders implements OrdersRepository {
 
   @override
   Future<QrTicket> getQr(String orderId) async => QrTicket(
-        qrToken: 'eyJvaWQiOiJvMSJ9.c2ln',
+        token: 'eyJvaWQiOiJvMSJ9.c2ln',
+        shortCode: 'K7M2Q9',
         expiresAt: DateTime.now().add(const Duration(minutes: 10)),
       );
 }

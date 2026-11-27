@@ -1,12 +1,13 @@
 import 'geo_point.dart';
 
-enum BusinessCategory { BAKERY, CAFE, RESTAURANT } // ignore: constant_identifier_names
+enum BusinessCategory { BAKERY, CAFE, RESTAURANT, MARKET } // ignore: constant_identifier_names
 
 extension BusinessCategoryTr on BusinessCategory {
   String get label => switch (this) {
         BusinessCategory.BAKERY => 'Fırın',
         BusinessCategory.CAFE => 'Kafe',
         BusinessCategory.RESTAURANT => 'Restoran',
+        BusinessCategory.MARKET => 'Market',
       };
 }
 
@@ -21,6 +22,8 @@ class NearbyPackage {
     required this.pickupStart,
     required this.pickupEnd,
     required this.distanceMeters,
+    this.photoIsRepresentative = true,
+    this.suspendedAvailable = 0,
     required this.businessId,
     required this.businessName,
     required this.category,
@@ -39,7 +42,14 @@ class NearbyPackage {
   /// Yerel saate çevrilmiş halde tutulur (DTO → entity dönüşümünde).
   final DateTime pickupStart;
   final DateTime pickupEnd;
-  final int distanceMeters;
+  /// Mahalleyle aramada backend null dönebilir (kontrat).
+  final int? distanceMeters;
+
+  /// Fotoğraf temsilî ise kartta "Temsilî görsel" etiketi gösterilir.
+  final bool photoIsRepresentative;
+
+  /// İşletmenin askı havuzunda bekleyen paket sayısı.
+  final int suspendedAvailable;
   final String businessId;
   final String businessName;
   final BusinessCategory category;

@@ -10,11 +10,15 @@ class MockApiClient extends Mock implements ApiClient {}
 
 Map<String, dynamic> itemJson(String id) => {
       'id': id,
+      'businessId': 'b1',
       'title': 'Sürpriz Paket',
-      'imageUrl': null,
+      'category': 'BAKERY',
+      'photoUrl': null,
+      'photoIsRepresentative': true,
+      'suspendedAvailable': 4,
       'price': 8990,
       'originalPrice': 25000,
-      'availableQuantity': 2,
+      'available': 2,
       'pickupStart': '2026-12-01T18:00:00Z',
       'pickupEnd': '2026-12-01T19:30:00Z',
       'distanceMeters': 420,

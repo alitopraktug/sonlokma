@@ -5,9 +5,9 @@ import '../domain/order.dart';
 part 'order_dto.freezed.dart';
 part 'order_dto.g.dart';
 
-// ⚠️ KONTRAT: Order alanları Prisma modelinden alındı. `package` özeti (başlık, işletme adı,
-// teslim aralığı) kontratta yok; "Siparişlerim" listesinin okunabilir olması için opsiyonel
-// olarak eklendi. openapi.yaml'da Siret ile netleştirilmeli. Gelmezse liste yine çalışır.
+// Kaynak: api-contract/openapi.draft.yaml → Order.
+// ⚠️ `package` özeti (başlık, işletme adı, teslim aralığı) kontratta yok; "Siparişlerim"
+// listesi okunabilir olsun diye opsiyonel. Kontrata eklenmesi önerilecek; gelmezse liste yine çalışır.
 
 @freezed
 abstract class OrderPackageDto with _$OrderPackageDto {
@@ -26,6 +26,7 @@ abstract class OrderDto with _$OrderDto {
   const factory OrderDto({
     required String id,
     required String packageId,
+    @Default('PURCHASE') String type,
     @Default(1) int quantity,
     required int totalPrice,
     required String status,
@@ -40,7 +41,11 @@ abstract class OrderDto with _$OrderDto {
 
 @freezed
 abstract class QrTicketDto with _$QrTicketDto {
-  const factory QrTicketDto({required String qrToken, required String expiresAt}) = _QrTicketDto;
+  const factory QrTicketDto({
+    required String token,
+    required String shortCode,
+    required String expiresAt,
+  }) = _QrTicketDto;
 
   factory QrTicketDto.fromJson(Map<String, dynamic> json) => _$QrTicketDtoFromJson(json);
 }
@@ -52,6 +57,7 @@ extension OrderDtoX on OrderDto {
   Order toEntity() => Order(
         id: id,
         packageId: packageId,
+        type: OrderType.values.byName(type),
         quantity: quantity,
         totalPrice: totalPrice,
         status: OrderStatus.values.byName(status),
@@ -66,5 +72,5 @@ extension OrderDtoX on OrderDto {
 }
 
 extension QrTicketDtoX on QrTicketDto {
-  QrTicket toEntity() => QrTicket(qrToken: qrToken, expiresAt: _local(expiresAt));
+  QrTicket toEntity() => QrTicket(token: token, shortCode: shortCode, expiresAt: _local(expiresAt));
 }
