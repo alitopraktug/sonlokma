@@ -63,6 +63,7 @@ class _PackageMapViewState extends ConsumerState<PackageMapView> {
         BusinessCategory.BAKERY => BitmapDescriptor.hueOrange,
         BusinessCategory.CAFE => BitmapDescriptor.hueViolet,
         BusinessCategory.RESTAURANT => BitmapDescriptor.hueRed,
+        BusinessCategory.MARKET => BitmapDescriptor.hueGreen,
       };
 
   void _onCameraMove(CameraPosition pos) {

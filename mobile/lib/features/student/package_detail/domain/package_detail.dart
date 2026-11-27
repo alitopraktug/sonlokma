@@ -32,6 +32,11 @@ class PackageDetail {
     required this.pickupEnd,
     required this.status,
     required this.business,
+    this.contentHints = const [],
+    this.allergens = const [],
+    this.suspendable = false,
+    this.suspendedAvailable = 0,
+    this.photoIsRepresentative = true,
   });
 
   final String id;
@@ -46,6 +51,19 @@ class PackageDetail {
   final DateTime pickupEnd;
   final PackageStatus status;
   final BusinessInfo business;
+
+  /// "Genellikle içinde" ipuçları.
+  final List<String> contentHints;
+
+  /// Kontrattaki 14 alerjenden işaretli olanlar (ör. GLUTEN, MILK).
+  final List<String> allergens;
+
+  /// Paket askıya bırakılabilir mi.
+  final bool suspendable;
+
+  /// İşletmenin askı havuzunda bekleyen paket sayısı.
+  final int suspendedAvailable;
+  final bool photoIsRepresentative;
 
   int get discountPercent =>
       originalPrice <= 0 ? 0 : (((originalPrice - price) / originalPrice) * 100).round();

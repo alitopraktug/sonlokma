@@ -44,7 +44,7 @@ class PackageCard extends StatelessWidget {
                         style: t.textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Text(
-                      '${Fmt.timeRange(p.pickupStart, p.pickupEnd)} · ${Fmt.distance(p.distanceMeters)}',
+                      [Fmt.timeRange(p.pickupStart, p.pickupEnd), if (p.distanceMeters != null) Fmt.distance(p.distanceMeters!)].join(' · '),
                       style: t.textTheme.bodySmall,
                     ),
                     const SizedBox(height: 4),

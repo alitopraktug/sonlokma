@@ -39,10 +39,9 @@ class OrdersRepositoryImpl implements OrdersRepository {
   @override
   Future<String> startCheckout(String orderId) async {
     final json = await _api.post<Map<String, dynamic>>(
-      '/payments/checkout',
-      data: {'orderId': orderId},
+      '/orders/$orderId/checkout',
     );
-    return json['checkoutFormUrl'] as String;
+    return json['paymentPageUrl'] as String;
   }
 
   @override

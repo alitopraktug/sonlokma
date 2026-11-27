@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sonlokma/features/student/discover/domain/geo_point.dart';
+import 'package:sonlokma/features/student/discover/data/nearby_package_dto.dart';
 import 'package:sonlokma/features/student/discover/domain/nearby_package.dart';
 import 'package:sonlokma/features/student/discover/presentation/providers/discover_filter_provider.dart';
 import 'package:sonlokma/features/student/discover/presentation/providers/location_provider.dart';
@@ -10,11 +11,17 @@ import 'package:sonlokma/features/student/profile/domain/profile.dart';
 
 Map<String, dynamic> detailJson({String status = 'ACTIVE', int available = 3}) => {
       'id': 'p1',
+      'businessId': 'b1',
       'title': 'Akşam Paketi',
+      'category': 'BAKERY',
       'price': 8990,
       'originalPrice': 25000,
-      'totalQuantity': 5,
-      'availableQuantity': available,
+      'quantity': 5,
+      'available': available,
+      'contentHints': ['Günün ekmeği', 'poğaça'],
+      'allergens': ['GLUTEN', 'MILK'],
+      'suspendable': true,
+      'address': 'Çarşı Cd. No:1',
       'pickupStart': '2026-12-01T18:00:00Z',
       'pickupEnd': '2026-12-01T19:00:00Z',
       'status': status,
@@ -22,7 +29,6 @@ Map<String, dynamic> detailJson({String status = 'ACTIVE', int available = 3}) =
         'id': 'b1',
         'name': 'Mahalle Fırını',
         'category': 'BAKERY',
-        'address': 'Çarşı Cd. No:1',
         'lat': 41.0,
         'lng': 29.0,
       },
@@ -32,9 +38,13 @@ void main() {
   group('PackageDetail', () {
     final beforeEnd = DateTime.utc(2026, 12, 1, 18, 30);
 
-    test('DTO → entity: description yoksa boş, kategori ve konum eşlenir', () {
+    test('DTO → entity: kontrat alanları, adres ve konum eşlenir', () {
       final p = PackageDetailDto.fromJson(detailJson()).toEntity();
-      expect(p.description, '');
+      expect(p.description, 'Günün ekmeği · poğaça');
+      expect(p.allergens, ['GLUTEN', 'MILK']);
+      expect(p.suspendable, isTrue);
+      expect(p.totalQuantity, 5);
+      expect(p.business.address, 'Çarşı Cd. No:1');
       expect(p.business.category, BusinessCategory.BAKERY);
       expect(p.business.location, const GeoPoint(41, 29));
       expect(p.discountPercent, 64);
@@ -115,5 +125,44 @@ void main() {
       expect(c.action, isNotEmpty);
     }
     expect(locationIssueCopy(LocationIssue.deniedForever).action, 'Ayarları aç');
+  });
+
+  test('MARKET kategorisi ve null mesafe çökmeden eşlenir', () {
+    final p = NearbyPackageDto.fromJson({
+      'id': 'p2',
+      'businessId': 'b2',
+      'title': 'Market Paketi',
+      'category': 'MARKET',
+      'price': 5000,
+      'originalPrice': 12000,
+      'available': 1,
+      'pickupStart': '2026-12-01T18:00:00Z',
+      'pickupEnd': '2026-12-01T19:00:00Z',
+      'distanceMeters': null,
+      'business': {'id': 'b2', 'name': 'Köşe Market', 'category': 'MARKET', 'lat': 41.0, 'lng': 29.0},
+    }).toEntity();
+    expect(p.category, BusinessCategory.MARKET);
+    expect(p.distanceMeters, isNull);
+  });
+
+  test('QR: token ve kısa kod kontrattaki adlarla okunur', () {
+    final q = QrTicketDto.fromJson(
+        {'token': 't', 'shortCode': 'K7M2Q9', 'expiresAt': '2026-12-01T18:10:00Z'}).toEntity();
+    expect(q.token, 't');
+    expect(q.shortCode, 'K7M2Q9');
+  });
+
+  test('Order: tür alanı eşlenir, yoksa PURCHASE', () {
+    Map<String, dynamic> j([String? type]) => {
+          'id': 'o1',
+          'packageId': 'p1',
+          if (type != null) 'type': type,
+          'totalPrice': 0,
+          'status': 'PAID',
+          'reservationExpiresAt': '2026-12-01T18:10:00Z',
+          'createdAt': '2026-12-01T18:00:00Z',
+        };
+    expect(OrderDto.fromJson(j('CLAIM')).toEntity().type, OrderType.CLAIM);
+    expect(OrderDto.fromJson(j()).toEntity().type, OrderType.PURCHASE);
   });
 }
