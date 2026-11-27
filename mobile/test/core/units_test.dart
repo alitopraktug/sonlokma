@@ -89,7 +89,7 @@ void main() {
     test('e-posta', () {
       expect(AuthValidators.email(''), isNotNull);
       expect(AuthValidators.email('ali@'), isNotNull);
-      expect(AuthValidators.email(' ali@ogr.edu.tr '), isNull);
+      expect(AuthValidators.email(' ali@example.com '), isNull);
     });
 
     test('şifre en az 8 karakter', () {
@@ -97,11 +97,6 @@ void main() {
       expect(AuthValidators.password('12345678'), isNull);
     });
 
-    test('.edu.tr tespiti büyük/küçük harf ve boşluk duyarsız', () {
-      expect(AuthValidators.isStudentEmail(' Ali@OGR.EDU.TR '), isTrue);
-      expect(AuthValidators.isStudentEmail('ali@gmail.com'), isFalse);
-      expect(AuthValidators.isStudentEmail('ali@edu.tr.example.com'), isFalse);
-    });
   });
 
   test('CursorPage: nextCursor null → son sayfa', () {

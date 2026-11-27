@@ -115,10 +115,10 @@ void main() {
     sub.close();
   });
 
-  test('konum izni yoksa kampüs merkezi kullanılır', () async {
+  test('konum izni yoksa varsayılan merkez kullanılır', () async {
     final c = make(location: null);
     await c.read(nearbyProvider.future);
-    expect(repo.queries.single.center, campusCenter);
+    expect(repo.queries.single.center, defaultCenter);
     expect(c.read(userLocationProvider).requireValue.isFallback, isTrue);
   });
 

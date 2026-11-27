@@ -10,7 +10,7 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 void main() {
   late MockAuthRepository repo;
 
-  setUpAll(() => registerFallbackValue(UserRole.STUDENT));
+  setUpAll(() => registerFallbackValue(UserRole.CUSTOMER));
   setUp(() => repo = MockAuthRepository());
 
   Future<void> pumpAndFill(WidgetTester t) async {
@@ -20,7 +20,7 @@ void main() {
     ));
     final fields = find.byType(TextFormField);
     await t.enterText(fields.at(0), 'Ali');
-    await t.enterText(fields.at(1), 'ali@gmail.com'); // .edu.tr değil → doğrulama ekranına gitmez
+    await t.enterText(fields.at(1), 'ali@gmail.com');
     await t.enterText(fields.at(2), 'sifre1234');
     await t.ensureVisible(find.byKey(const Key('register_submit')));
     await t.pump();
@@ -48,7 +48,7 @@ void main() {
         ));
   });
 
-  testWidgets('onay verilince STUDENT rolüyle kayıt olunur', (t) async {
+  testWidgets('onay verilince CUSTOMER rolüyle kayıt olunur', (t) async {
     stubRegister();
     await pumpAndFill(t);
     await t.tap(find.byKey(const Key('register_kvkk')));
@@ -60,7 +60,7 @@ void main() {
           email: 'ali@gmail.com',
           password: 'sifre1234',
           name: 'Ali',
-          role: UserRole.STUDENT,
+          role: UserRole.CUSTOMER,
         )).called(1);
   });
 

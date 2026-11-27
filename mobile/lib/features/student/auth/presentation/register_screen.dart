@@ -27,7 +27,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   void initState() {
     super.initState();
-    _email.addListener(() => setState(() {})); // .edu.tr ipucunu canlı güncelle
   }
 
   @override
@@ -67,17 +66,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: email,
             password: _password.text,
             name: _name.text.trim(),
-            role: UserRole.STUDENT, // işletme kaydı Yusuf'un akışında
+            role: UserRole.CUSTOMER, // işletme kaydı Yusuf'un akışında
           );
       if (!mounted) return;
-      if (AuthValidators.isStudentEmail(email)) {
-        context.pushReplacement(Routes.verifyEmail, extra: email);
-      } else {
-        final messenger = ScaffoldMessenger.of(context);
-        await Navigator.of(context).maybePop();
-        messenger.showSnackBar(
-            const SnackBar(content: Text('Kayıt tamam, giriş yapabilirsin.')));
-      }
+      final messenger = ScaffoldMessenger.of(context);
+      await Navigator.of(context).maybePop();
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Kayıt tamam, giriş yapabilirsin.')));
     } on ApiError catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.userMessage)));
@@ -88,7 +83,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isStudent = AuthValidators.isStudentEmail(_email.text);
     return Scaffold(
       appBar: AppBar(title: const Text('Kayıt ol')),
       body: SafeArea(
@@ -110,12 +104,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _email,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'E-posta',
-                    helperText: isStudent
-                        ? '✓ Öğrenci e-postası: doğrulama kodu gönderilecek'
-                        : 'Öğrenci indirimleri için .edu.tr adresini kullan',
-                  ),
+                  decoration: const InputDecoration(labelText: 'E-posta'),
                   validator: AuthValidators.email,
                 ),
                 const SizedBox(height: 16),

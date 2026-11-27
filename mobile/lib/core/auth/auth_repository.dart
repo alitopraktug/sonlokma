@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../network/api_client.dart';
 import 'token_storage.dart';
 
-enum UserRole { STUDENT, BUSINESS, ADMIN } // ignore: constant_identifier_names — kontrattaki adlar
+enum UserRole { CUSTOMER, BUSINESS, ADMIN } // ignore: constant_identifier_names — kontrattaki adlar
 
 class AppUser {
   const AppUser({
@@ -11,21 +11,18 @@ class AppUser {
     required this.email,
     required this.name,
     required this.role,
-    required this.isStudentVerified,
   });
 
   final String id;
   final String email;
   final String name;
   final UserRole role;
-  final bool isStudentVerified;
 
   factory AppUser.fromJson(Map<String, dynamic> j) => AppUser(
         id: j['id'] as String,
         email: j['email'] as String,
         name: j['name'] as String,
         role: UserRole.values.byName(j['role'] as String),
-        isStudentVerified: j['isStudentVerified'] as bool? ?? false,
       );
 }
 

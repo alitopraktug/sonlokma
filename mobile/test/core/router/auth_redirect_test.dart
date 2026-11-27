@@ -4,7 +4,7 @@ import 'package:sonlokma/core/auth/auth_repository.dart';
 import 'package:sonlokma/core/router/app_router.dart';
 
 AppUser _user(UserRole role) =>
-    AppUser(id: '1', email: 'a@x.edu.tr', name: 'A', role: role, isStudentVerified: true);
+    AppUser(id: '1', email: 'a@example.com', name: 'A', role: role);
 
 void main() {
   test('yüklenirken splash', () {
@@ -17,14 +17,14 @@ void main() {
   });
 
   test('role göre yönlendirme', () {
-    expect(authRedirect(AsyncData(_user(UserRole.STUDENT)), Routes.login), Routes.home);
+    expect(authRedirect(AsyncData(_user(UserRole.CUSTOMER)), Routes.login), Routes.home);
     expect(authRedirect(AsyncData(_user(UserRole.BUSINESS)), Routes.splash), Routes.business);
   });
 
   test('roller birbirinin ekranına giremez', () {
-    expect(authRedirect(AsyncData(_user(UserRole.STUDENT)), '/business/orders'), Routes.home);
+    expect(authRedirect(AsyncData(_user(UserRole.CUSTOMER)), '/business/orders'), Routes.home);
     expect(authRedirect(AsyncData(_user(UserRole.BUSINESS)), '/home/x'), Routes.business);
     expect(authRedirect(AsyncData(_user(UserRole.BUSINESS)), Routes.orders), Routes.business);
-    expect(authRedirect(AsyncData(_user(UserRole.STUDENT)), Routes.orderQr('o1')), isNull);
+    expect(authRedirect(AsyncData(_user(UserRole.CUSTOMER)), Routes.orderQr('o1')), isNull);
   });
 }
