@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/auth/auth_repository.dart';
 import '../../../../core/network/api_error.dart';
-import '../../../../core/router/app_router.dart';
 import 'validators.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
