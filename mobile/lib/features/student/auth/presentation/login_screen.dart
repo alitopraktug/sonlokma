@@ -64,7 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       const SizedBox(height: 12),
                       Text('SonLokma',
                           textAlign: TextAlign.center, style: theme.textTheme.headlineMedium),
-                      Text('Gün sonu lezzetleri, öğrenci fiyatına',
+                      Text('Gün sonu lezzetleri, israf olmadan',
                           textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
                       const SizedBox(height: 32),
                       TextFormField(

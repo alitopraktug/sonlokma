@@ -16,7 +16,4 @@ abstract final class AuthValidators {
 
   static String? name(String? v) =>
       (v == null || v.trim().length < 2) ? 'Adını gir' : null;
-
-  /// Öğrenci doğrulaması backend'de yapılır; burada sadece kullanıcıyı bilgilendiriyoruz.
-  static bool isStudentEmail(String email) => email.trim().toLowerCase().endsWith('.edu.tr');
 }

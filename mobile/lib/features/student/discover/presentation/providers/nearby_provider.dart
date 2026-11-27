@@ -9,7 +9,7 @@ import '../../domain/nearby_package.dart';
 import 'discover_filter_provider.dart';
 import 'location_provider.dart';
 
-/// Sorgunun merkezi. null → kullanıcının konumu (veya kampüs merkezi).
+/// Sorgunun merkezi. null → kullanıcının konumu (veya varsayılan merkez).
 /// Harita kaydırıldıkça (debounce sonrası) güncellenir.
 class QueryCenterNotifier extends Notifier<GeoPoint?> {
   /// Bu kadar küçük kaydırmalar yeni istek tetiklemez. Debounce "ne zaman" sorusunu,

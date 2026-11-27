@@ -22,7 +22,7 @@ abstract final class Routes {
   static const register = '/register';
   static const verifyEmail = '/verify-email';
 
-  // STUDENT (alt menü sekmeleri: home / orders / profile)
+  // CUSTOMER (alt menü sekmeleri: home / orders / profile)
   static const home = '/home';
   static const orders = '/orders';
   static const profile = '/profile';

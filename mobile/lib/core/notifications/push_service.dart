@@ -10,6 +10,7 @@ import '../auth/auth_controller.dart';
 import '../auth/auth_repository.dart';
 import '../router/app_router.dart';
 import '../ui/messenger.dart';
+import 'push_events.dart';
 
 /// Kontrat §7 push formatı: `{ data: { type, orderId } }` → hedef rota. Saf fonksiyon → test edilir.
 String? routeForPush(Map<String, dynamic> data) {
@@ -81,6 +82,7 @@ class FirebasePushService implements PushService {
 
     // Ön plandayken sistem bildirimi gösterilmez → snackbar
     _subs.add(FirebaseMessaging.onMessage.listen((m) {
+      _ref.read(pushEventBusProvider).emit(PushEvent.fromData(m.data)); // ekranlar yenilensin
       final route = routeForPush(m.data);
       scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(
         content: Text(_foregroundText(m.data['type'] as String?)),
@@ -90,6 +92,7 @@ class FirebasePushService implements PushService {
   }
 
   void _open(Map<String, dynamic> data) {
+    _ref.read(pushEventBusProvider).emit(PushEvent.fromData(data));
     final route = routeForPush(data);
     if (route != null) _router.push(route);
   }

@@ -46,7 +46,11 @@ class FakeLocation implements LocationService {
   FakeLocation(this.point);
   final GeoPoint? point;
   @override
-  Future<GeoPoint?> currentPosition() async => point;
+  Future<LocationReading> read() async => point == null
+      ? const LocationReading.failed(LocationIssue.denied)
+      : LocationReading.ok(point!);
+  @override
+  Future<void> openSettings(LocationIssue issue) async {}
 }
 
 void main() {
@@ -111,10 +115,10 @@ void main() {
     sub.close();
   });
 
-  test('konum izni yoksa kampüs merkezi kullanılır', () async {
+  test('konum izni yoksa varsayılan merkez kullanılır', () async {
     final c = make(location: null);
     await c.read(nearbyProvider.future);
-    expect(repo.queries.single.center, campusCenter);
+    expect(repo.queries.single.center, defaultCenter);
     expect(c.read(userLocationProvider).requireValue.isFallback, isTrue);
   });
 

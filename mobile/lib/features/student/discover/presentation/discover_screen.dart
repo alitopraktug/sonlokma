@@ -16,14 +16,43 @@ class DiscoverScreen extends ConsumerStatefulWidget {
   ConsumerState<DiscoverScreen> createState() => _DiscoverScreenState();
 }
 
-class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
+class _DiscoverScreenState extends ConsumerState<DiscoverScreen> with WidgetsBindingObserver {
   _Mode _mode = _Mode.map;
   bool _bannerDismissed = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Kullanıcı ayarlardan izin verip geri dönünce konumu yeniden dene.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final loc = ref.read(userLocationProvider).valueOrNull;
+    if (loc != null && loc.isFallback) ref.invalidate(userLocationProvider);
+  }
+
+  Future<void> _fixLocation(LocationIssue issue) async {
+    if (issue == LocationIssue.denied || issue == LocationIssue.unavailable) {
+      ref.invalidate(userLocationProvider); // sistem izin diyaloğu tekrar açılır
+    } else {
+      await ref.read(locationServiceProvider).openSettings(issue);
+      // dönüşte didChangeAppLifecycleState yeniden dener
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final filterCount = ref.watch(discoverFilterProvider.select((f) => f.activeCount));
-    final isFallback = ref.watch(userLocationProvider).valueOrNull?.isFallback ?? false;
+    final issue = ref.watch(userLocationProvider).valueOrNull?.issue;
 
     return Scaffold(
       appBar: AppBar(
@@ -50,25 +79,23 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
       ),
       body: Column(
         children: [
-          if (isFallback && !_bannerDismissed)
-            MaterialBanner(
-              leading: const Icon(Icons.location_off_outlined),
-              // KVKK: konumu neden istediğimizi ve reddedince ne olduğunu açıkça söylüyoruz.
-              content: const Text(
-                'Konum iznin olmadığı için kampüs merkezini gösteriyoruz. Konumunu yalnızca '
-                'yakındaki paketleri bulmak için kullanırız, kaydetmeyiz.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => setState(() => _bannerDismissed = true),
-                  child: const Text('Tamam'),
-                ),
-                TextButton(
-                  onPressed: () => ref.invalidate(userLocationProvider),
-                  child: const Text('İzin ver'),
-                ),
-              ],
-            ),
+          if (issue != null && !_bannerDismissed)
+            Builder(builder: (_) {
+              final copy = locationIssueCopy(issue);
+              return MaterialBanner(
+                key: const Key('location_banner'),
+                leading: const Icon(Icons.location_off_outlined),
+                // KVKK: konumu neden istediğimizi ve reddedince ne olduğunu açıkça söylüyoruz.
+                content: Text(copy.message),
+                actions: [
+                  TextButton(
+                    onPressed: () => setState(() => _bannerDismissed = true),
+                    child: const Text('Tamam'),
+                  ),
+                  TextButton(onPressed: () => _fixLocation(issue), child: Text(copy.action)),
+                ],
+              );
+            }),
           Expanded(
             // IndexedStack: geçişte harita yeniden oluşturulmaz, kamera konumu korunur.
             child: IndexedStack(

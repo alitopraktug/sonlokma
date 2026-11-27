@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/network/api_error.dart';
 import '../../../../../core/router/app_router.dart';
+import '../../../../../core/ui/skeleton.dart';
 import '../providers/nearby_provider.dart';
 import 'package_card.dart';
 
@@ -46,7 +47,7 @@ class _PackageListViewState extends ConsumerState<PackageListView> {
                   : 'Paketler yüklenemedi.',
               action: () => ref.invalidate(nearbyProvider),
             )
-          : const Center(child: CircularProgressIndicator());
+          : const SkeletonList();
     }
 
     if (data.items.isEmpty) {
