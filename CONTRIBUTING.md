@@ -50,6 +50,14 @@ Kurallar:
 - İnceleme 24 saat içinde yapılır; acil ise WhatsApp'ta haber verilir.
 - Yorumlar koda yapılır, kişiye değil. "Bunu şöyle yapsak?" dili kullanılır.
 
+### Merge ve review akışı
+- **Sıklık:** Her gün, onay + yeşil CI gelir gelmez. Sabit merge günü yok; bekleyen PR çakışma (conflict) üretir.
+- **Sabah ilk iş:** Kendi koduna geçmeden bekleyen PR'lara review at.
+- **Merge'ü PR sahibi yapar**, ekibe grupta kısa bir haber vererek.
+- **24 saat kuralı:** 1 günden uzun bekleyen PR için grupta hatırlatma yapılır.
+- **Gün sonu:** O günün işi küçük bir PR olarak açılmış ve review istenmiş olur.
+- **Küçük PR:** Bir issue = bir PR; açıklamaya `Closes #12` yazılır, merge olunca issue kapanır.
+
 ## 4. API kontratı
 - `api-contract/openapi.draft.yaml` (onaydan sonra `openapi.yaml`) **tek doğru kaynaktır**; içeriği proje brifi Bölüm 6 ile birebir aynıdır.
 - Para alanları tam sayı **kuruş**; tarihler ISO 8601 UTC, ekranda yerel saate çevrilir.
