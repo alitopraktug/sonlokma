@@ -32,7 +32,7 @@ class UserLocation {
   final GeoPoint point;
   final LocationIssue? issue;
 
-  /// true → kampüs merkezi kullanılıyor, UI açıklama göstermeli (KVKK).
+  /// true → varsayılan merkez kullanılıyor, UI açıklama göstermeli (KVKK).
   bool get isFallback => issue != null;
 }
 
@@ -88,23 +88,23 @@ class GeolocatorLocationService implements LocationService {
   }
 }
 
-final campusCenter = GeoPoint(Env.campusLat, Env.campusLng);
+final defaultCenter = GeoPoint(Env.defaultLat, Env.defaultLng);
 
 final locationServiceProvider = Provider<LocationService>((_) => GeolocatorLocationService());
 
 final userLocationProvider = FutureProvider<UserLocation>((ref) async {
   final r = await ref.watch(locationServiceProvider).read();
-  return r.point != null ? UserLocation(r.point!) : UserLocation(campusCenter, issue: r.issue);
+  return r.point != null ? UserLocation(r.point!) : UserLocation(defaultCenter, issue: r.issue);
 });
 
 /// Banner metni ve düğmesi — saf fonksiyon, test edilir.
 ({String message, String action}) locationIssueCopy(LocationIssue issue) => switch (issue) {
       LocationIssue.serviceDisabled => (
-          message: 'Telefonunun konum servisi kapalı, kampüs merkezini gösteriyoruz.',
+          message: 'Telefonunun konum servisi kapalı, şehir merkezini gösteriyoruz.',
           action: 'Konumu aç',
         ),
       LocationIssue.denied => (
-          message: 'Konum iznin olmadığı için kampüs merkezini gösteriyoruz. Konumunu yalnızca '
+          message: 'Konum iznin olmadığı için şehir merkezini gösteriyoruz. Konumunu yalnızca '
               'yakındaki paketleri bulmak için kullanırız, kaydetmeyiz.',
           action: 'İzin ver',
         ),
@@ -114,7 +114,7 @@ final userLocationProvider = FutureProvider<UserLocation>((ref) async {
           action: 'Ayarları aç',
         ),
       LocationIssue.unavailable => (
-          message: 'Konumun şu an alınamadı, kampüs merkezini gösteriyoruz.',
+          message: 'Konumun şu an alınamadı, şehir merkezini gösteriyoruz.',
           action: 'Tekrar dene',
         ),
     };

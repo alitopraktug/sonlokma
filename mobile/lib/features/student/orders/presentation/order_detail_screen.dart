@@ -9,6 +9,7 @@ import '../../../../core/utils/formatters.dart';
 import '../domain/order.dart';
 import 'orders_providers.dart';
 import 'orders_screen.dart' show StatusIcon;
+import 'resume_payment_button.dart';
 
 /// PICKUP_REMINDER bildirimi buraya açılır.
 class OrderDetailScreen extends ConsumerWidget {
@@ -54,12 +55,7 @@ class OrderDetailScreen extends ConsumerWidget {
                 icon: const Icon(Icons.qr_code_2),
                 label: const Text('Teslim QR kodunu göster'),
               ),
-            if (o.status == OrderStatus.PENDING_PAYMENT)
-              const Text(
-                'Ödemen doğrulanınca bildirim alacaksın. Rezervasyon süresi dolarsa paket '
-                'otomatik olarak serbest kalır ve ücret alınmaz.',
-                textAlign: TextAlign.center,
-              ),
+            if (o.status == OrderStatus.PENDING_PAYMENT) ResumePaymentButton(order: o),
           ]),
         ),
       ),

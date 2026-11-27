@@ -76,6 +76,11 @@ class _PackageMapViewState extends ConsumerState<PackageMapView> {
     Env.benchNoDebounce ? update() : _debouncer.run(update);
   }
 
+  /// Kamerayı taşır; sorgu merkezi onCameraMove → debounce yoluyla kendiliğinden güncellenir.
+  Future<void> _moveCamera(GeoPoint p) async {
+    await _controller?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(p.lat, p.lng), 14));
+  }
+
   Future<void> _zoomToCluster(Cluster c) async {
     final current = await _controller?.getZoomLevel() ?? 14;
     await _controller?.animateCamera(CameraUpdate.newLatLngZoom(c.position, current + 2));
@@ -86,9 +91,19 @@ class _PackageMapViewState extends ConsumerState<PackageMapView> {
     final location = ref.watch(userLocationProvider);
     final nearby = ref.watch(nearbyProvider);
 
+    // initialCameraPosition yalnızca ilk açılışta okunur. İzin sonradan verilirse
+    // (ayarlardan dönüş) kamerayı kullanıcının konumuna taşı.
+    ref.listen(userLocationProvider, (prev, next) {
+      final before = prev?.valueOrNull;
+      final now = next.valueOrNull;
+      if (before != null && before.isFallback && now != null && !now.isFallback) {
+        _moveCamera(now.point);
+      }
+    });
+
     return location.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(), // provider hata fırlatmaz, kampüse düşer
+      error: (_, __) => const SizedBox.shrink(), // provider hata fırlatmaz, varsayılan merkeze düşer
       data: (loc) {
         final items = nearby.valueOrNull?.items ?? const <NearbyPackage>[];
         return Stack(
@@ -105,6 +120,16 @@ class _PackageMapViewState extends ConsumerState<PackageMapView> {
                   ? const <ClusterManager>{}
                   : {ClusterManager(clusterManagerId: _clusterId, onClusterTap: _zoomToCluster)},
               markers: _markersFor(items),
+            ),
+            Positioned(
+              left: 12,
+              bottom: 24,
+              child: FloatingActionButton.small(
+                heroTag: 'center',
+                tooltip: 'Merkeze dön',
+                onPressed: () => _moveCamera(defaultCenter),
+                child: const Icon(Icons.school_outlined),
+              ),
             ),
             if (Env.benchOverlay)
               Positioned(

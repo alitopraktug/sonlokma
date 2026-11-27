@@ -60,7 +60,7 @@ class FakeDiscover implements DiscoverRepository {
           pickupEnd: _pickupEnd,
           distanceMeters: 350,
           businessId: 'b1',
-          businessName: 'Kampüs Fırını',
+          businessName: 'Mahalle Fırını',
           category: BusinessCategory.BAKERY,
           location: const GeoPoint(41.043, 29.01),
         ),
@@ -83,9 +83,9 @@ class FakeDetail implements PackageDetailRepository {
         status: PackageStatus.ACTIVE,
         business: const BusinessInfo(
           id: 'b1',
-          name: 'Kampüs Fırını',
+          name: 'Mahalle Fırını',
           category: BusinessCategory.BAKERY,
-          address: 'Kampüs Cd. No:1',
+          address: 'Çarşı Cd. No:1',
           location: GeoPoint(41.043, 29.01),
         ),
       );
@@ -105,7 +105,7 @@ class FakeOrders implements OrdersRepository {
         reservationExpiresAt: DateTime.now().add(const Duration(minutes: 10)),
         createdAt: DateTime.now(),
         packageTitle: _title,
-        businessName: 'Kampüs Fırını',
+        businessName: 'Mahalle Fırını',
       );
 
   @override
@@ -146,10 +146,9 @@ void main() {
     when(() => auth.restoreSession()).thenAnswer((_) async => null);
     when(() => auth.login(any(), any())).thenAnswer((_) async => const AppUser(
           id: 'u1',
-          email: 'ali@ogr.edu.tr',
+          email: 'ali@example.com',
           name: 'Ali',
-          role: UserRole.STUDENT,
-          isStudentVerified: true,
+          role: UserRole.CUSTOMER,
         ));
 
     await t.pumpWidget(ProviderScope(
@@ -170,7 +169,7 @@ void main() {
     await t.pumpAndSettle();
 
     // 1) Giriş
-    await t.enterText(find.byKey(const Key('login_email')), 'ali@ogr.edu.tr');
+    await t.enterText(find.byKey(const Key('login_email')), 'ali@example.com');
     await t.enterText(find.byKey(const Key('login_password')), 'sifre1234');
     await t.tap(find.byKey(const Key('login_submit')));
     await t.pumpAndSettle();

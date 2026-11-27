@@ -61,12 +61,9 @@ class ProfileScreen extends ConsumerWidget {
               leading: CircleAvatar(child: Text(p.user.name.isEmpty ? '?' : p.user.name[0])),
               title: Text(p.user.name, style: t.textTheme.titleLarge),
               subtitle: Text(p.user.email),
-              trailing: p.user.isStudentVerified
-                  ? const Chip(avatar: Icon(Icons.verified, size: 18), label: Text('Öğrenci'))
-                  : null,
             ),
             const SizedBox(height: 16),
-            Text('Sosyal etkin', style: t.textTheme.titleMedium),
+            Text('Sosyal etki', style: t.textTheme.titleMedium),
             const SizedBox(height: 8),
             _ImpactGrid(p.impact),
             const SizedBox(height: 24),

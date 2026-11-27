@@ -27,9 +27,10 @@ abstract final class Env {
   /// Haritada istek sayacı rozeti göster.
   static const benchOverlay = bool.fromEnvironment('BENCH_OVERLAY');
 
-  /// Konum izni yoksa haritanın açılacağı kampüs merkezi. Varsayılanı kendi kampüsünüzle değiştirin.
-  static final campusLat =
-      double.parse(const String.fromEnvironment('CAMPUS_LAT', defaultValue: '41.0422'));
-  static final campusLng =
-      double.parse(const String.fromEnvironment('CAMPUS_LNG', defaultValue: '29.0094'));
+  /// Konum izni yoksa haritanın açılacağı varsayılan merkez (şimdilik İstanbul).
+  // KARAR BEKLİYOR: plan 6. gün — konum yoksa mahalle seçimi gelince bu yalnızca son çare olacak.
+  static final defaultLat =
+      double.parse(const String.fromEnvironment('DEFAULT_LAT', defaultValue: '41.0422'));
+  static final defaultLng =
+      double.parse(const String.fromEnvironment('DEFAULT_LNG', defaultValue: '29.0094'));
 }
